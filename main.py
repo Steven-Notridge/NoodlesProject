@@ -1,7 +1,9 @@
 # Created by Steven Notridge, https://github.com/steven-notridge
-# v0.1;
+# v0.1b;
 # Added Broth and Name searching, also added Error checking for the Name search.
 # I may need to make a new method for searching strings, because I want to be able to search by string on flavour and tags.
+# Decided to additional options for the Naming, as you can't tell what is present already. I should also get round to enabling lowercase, because currently
+# It has to be a perfect match.
 
 import pandas as pd
 
@@ -64,6 +66,7 @@ def print_menu():
 
 
 def opt_rating():
+    print("\n")
     # Request Users input
     userinput = get_integer_input("What Rating would you like to search for: ")
     # Because we are using a Function to enable Errors for the inputs, we need to convert the integer into a String, to avoid more errors!
@@ -85,6 +88,7 @@ def opt_rating():
 
 
 def opt_broth():
+    print("\n")
     # Basically identical to the opt_rating, check there for notes.
     userinput = get_string_input("What score of Broth would you like to search for: ")
     str_userinput = str(userinput)
@@ -97,6 +101,7 @@ def opt_broth():
 
 
 def opt_name():
+    print("\n")
     userinput = input('What is the name of the Brand you wish to search for: ')
     # Retrieve the Data from the csv based on the input from user. We also convert the integer input as a String, because accessor doesn't like them.
     # Create a new DataFrame with the Headings we wish to display, along with where the information is retrieved from.
@@ -109,10 +114,26 @@ def opt_name():
     # Now we need to check if the users input is actually in the Name column, which will proceed to the next line.
     if userinput in df.index:
         # If userinput is located, we now print the results, whilst also filtering them to match the name of the input.
+        print("\n")
         print(df[df.index.str.contains(userinput)])
     # If we cannot locate userinput within the Name column, we proceed with the below.
     else:
+        print("\n")
         print("There doesn't seem to be a name or brand that matches your input.")
+        namecheck = input("Would you like to get a list of all the Brands that have been reviewed? ")
+        if namecheck in ('yes', 'y', 'Yes', 'Y'):
+            print("\n")
+            # Creating another DataFrame because we don't want to use one that's already been manipulated.
+            namelist = pd.DataFrame(data)
+            # Converting the DataFrame to a list, that way we don't have any of the other columns or rows involved.
+            namelist_filtered = namelist['Name (Brand)'].tolist()
+            # A for statement to print out each Name that's included, and to make it look neater for the EndUser as a string rather than a list.
+            for name in namelist_filtered:
+                print(name)
+        # If anything else is typed instead of the typical yes formats, execute the below.
+        else:
+            print("\n")
+            print('Okay, going back to menu.')
 
 
 # Running the code together.
