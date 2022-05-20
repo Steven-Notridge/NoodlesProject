@@ -1,16 +1,16 @@
 # Created by Steven Notridge, https://github.com/steven-notridge
-# v0.2;
-# Solved the case-sensitive problem. And I've also managed to figure out a better way of searching for the input.
-# The lack of Programmer mindset made me miss the handy True/False statements.
-# I've rewritten the whole of the Name (Brand) search, because that wasn't optimal code.
-# I've also deleted the get_string_input because there's no need for it now.
+# v0.3;
+# Changed the Width of the DataFrames again, now it extends the entire Terminal. Not sure who I didn't try this one before.
+# Overall Score and Price Per Point has been added.
 
 import pandas as pd
 
 # Grab the data we need from the csv
 data = pd.read_csv("Data/NoodlesData.csv")
-pd.set_option('display.max_colwidth', None)
-pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
+pd.options.display.float_format = '{:.3f}'.format
 
 # Creating the Menu Options that will be displayed to EndUser
 menu_options = {
@@ -65,24 +65,42 @@ def opt_rating():
     # Ensuring the Brand stays if it goes to a new line etc.
     df = df.set_index(['Name (Brand)'])
     # Aligning the text within the Name column to the left and ensuring there is no cutoff.
-    df.style.set_properties(subset=['Name (Brand)'], **{'text-align': 'left', 'width': '300px'})
+    df.style.set_properties(subset=['Name (Brand)'], **{'text-align': 'left'})
     # Sorting by Rating by Descending.
     df.sort_values('Rating')
+    # Adding the Overall Score together.
+    df = df.assign(Overall=lambda x: x.Rating + x.Accuracy + x.Broth - x.Artificial)
+    # For PPP we need to fix the Price column, because it has the currency symbol. Lambda doesn't work with them and throws an error.
+    df['Price'] = df['Price'].str.replace('£', '')
+    # Formatting as a Float, using an int was throwing errors.
+    df['Price'] = df['Price'].astype(float)
+    # Add the PPP column to the end of the table.
+    df = df.assign(PricePerPoint=lambda y: y.Price / y.Overall)
+    # Change the decimals of PPP to 2.
+    # df.style.format({
+    #     'PricePerPoint': '{:,.2f}%'.format,
+    # })
     # Print the Results.
     print(df)
+    print("\n")
 
 
 def opt_broth():
     print("\n")
     # Basically identical to the opt_rating, check there for notes.
-    userinput = get_string_input("What score of Broth would you like to search for: ")
+    userinput = get_integer_input("What score of Broth would you like to search for: ")
     str_userinput = str(userinput)
     results = data[data['Broth'].astype('str').str.contains(str_userinput)]
     df = pd.DataFrame(columns=revColumns, data=results)
     df = df.set_index(['Name (Brand)'])
-    df.style.set_properties(subset=['Name (Brand)'], **{'text-align': 'left', 'width': '300px'})
+    df.style.set_properties(subset=['Name (Brand)'], **{'text-align': 'left'})
+    df = df.assign(Overall=lambda x: x.Rating + x.Accuracy + x.Broth - x.Artificial)
+    df['Price'] = df['Price'].str.replace('£', '')
+    df['Price'] = df['Price'].astype(float)
+    df = df.assign(PricePerPoint=lambda y: y.Price / y.Overall)
     df.sort_values('Broth')
     print(df)
+    print("\n")
 
 
 def opt_name():
@@ -91,8 +109,11 @@ def opt_name():
     # In this case, we just reference the original data instead of the results like in Rating, because although it would work, we cannot do any error checking.
     df = pd.DataFrame(columns=revColumns, data=data)
     # Formatting is for winners.
-    df.style.set_properties(subset=['Name (Brand)'], **{'text-align': 'left', 'width': '300px'})
-    # Still sorting by Rating, because surely we want to know what's the best of that Brand?
+    df.style.set_properties(subset=['Name (Brand)'], **{'text-align': 'left'})
+    df = df.assign(Overall=lambda x: x.Rating + x.Accuracy + x.Broth - x.Artificial)
+    df['Price'] = df['Price'].str.replace('£', '')
+    df['Price'] = df['Price'].astype(float)
+    df = df.assign(PricePerPoint=lambda y: y.Price / y.Overall)
     df.sort_values('Rating')
     # Now we need to check if the users input is actually in the Name column. nameCheck will request a True/False answer.
     nameCheck = df['Name (Brand)'].str.contains(userinput, case=False).any()
@@ -106,6 +127,7 @@ def opt_name():
         # I believe that's due to it breaking the str.contains part, and making it act weird. We don't need to format the data before we use it anyway.
         nameSearch = nameSearch.set_index(['Name (Brand)'])
         print(nameSearch)
+        print("\n")
     # If we cannot locate userinput within the Name column, we proceed with the below.
     else:
         print("\n")
@@ -130,7 +152,11 @@ def opt_flavour():
     userinput = input('What is the Flavour you wish to search for: ')
     df = pd.DataFrame(columns=revColumns, data=data)
     df = df.set_index(['Name (Brand)'])
-    df.style.set_properties(subset=['Name (Brand)'], **{'text-align': 'left', 'width': '300px'})
+    df.style.set_properties(subset=['Name (Brand)'], **{'text-align': 'left'})
+    df = df.assign(Overall=lambda x: x.Rating + x.Accuracy + x.Broth - x.Artificial)
+    df['Price'] = df['Price'].str.replace('£', '')
+    df['Price'] = df['Price'].astype(float)
+    df = df.assign(PricePerPoint=lambda y: y.Price / y.Overall)
     df.sort_values('Rating')
     flavCheck = df['Flavour'].str.contains(userinput, case=False).any()
     flavSearch = df[df['Flavour'].str.contains(userinput, case=False)]
@@ -138,6 +164,7 @@ def opt_flavour():
     if flavCheck:
         print("\n")
         print(flavSearch)
+        print("\n")
 
     # The below is replicated from opt_name - Check the notes there.
     else:
